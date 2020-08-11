@@ -32,63 +32,55 @@ if ( !class_exists( 'Food_Online_Orders' ) ) {
 		 }
 
 add_action( 'woocommerce_email_order_meta', array($this,'add_order_time_info_to_emails'), 10, 4 );
-if (  get_option('fdoe_add_to_thank_you', 'no') == 'yes' ) {
-add_action( 'woocommerce_thankyou', array($this,'add_to_thankyou_page'), 99 );
+	if (  get_option('fdoe_add_to_thank_you', 'no') == 'yes' ) {
+		add_action( 'woocommerce_thankyou', array($this,'add_to_thankyou_page'), 99 );
+	}
 }
 
-
-    }
-
 function echo_time($store=false){
-	$type = WC()
-					->session
-					->get('fdoe_shipping');
-		$time = WC()
-					->session
-					->get('fdoe_shipping_time');
+	$atype = WC()->session->get('chosen_shipping_methods');
+	$time = WC()->session->get('fdoe_shipping_time');
 
+	$type =  strtok($atype[0], ':');
+	$time[1] = $time[0] + 60;		
+		
 	ob_start();
 
-if($store == false){
+	if($store == false){
 		if($type == 'local_pickup'  ){
 			if(isset($time[0])){
-			echo '<h2>' . __( 'When to pick up?', 'food-online-for-woocommerce' ) . '</h2><ul><li>'. __( 'Your order will be ready in ', 'food-online-for-woocommerce' ) . $time[0] . __( ' minutes.', 'food-online-for-woocommerce' ).'</li></ul>';
+				echo '<h2>' . __( 'When to pick up?', 'food-online-for-woocommerce' ) . '</h2><ul><li>'. __( 'Your order will be ready in ', 'food-online-for-woocommerce' ) . $time[0] . __( ' minutes.', 'food-online-for-woocommerce' ).'</li></ul>';
 			}else{
 				echo '<h2>' . __( 'This order is for pick up.', 'food-online-for-woocommerce' ) . '</h2>';
 			}
-			}elseif( ($type == 'flat_rate' || $type == 'free_shipping' || $type == 'szbd-shipping-method') ){
-				if(isset($time[1])){
+		}elseif( ($type == 'flat_rate' || $type == 'free_shipping' || $type == 'szbd-shipping-method') ){
+			if(isset($time[1])){
 				echo '<h2>' . __( 'When will we deliver to you?', 'food-online-for-woocommerce' ) . '</h2>';
-					 echo __( 'Your order will be delivered in ', 'food-online-for-woocommerce' ) . $time[1] . __( ' minutes.', 'food-online-for-woocommerce' );
-				}else{
-					echo '<h2>' . __( 'This order will be delivered.', 'food-online-for-woocommerce' ) . '</h2>';
-				}
+				echo __( 'Your order will be delivered in ', 'food-online-for-woocommerce' ) . $time[1] . __( ' minutes.', 'food-online-for-woocommerce' );
+			}else{
+				echo '<h2>' . __( 'This order will be delivered.', 'food-online-for-woocommerce' ) . '</h2>';
 			}
-}elseif($store == true){
-
-	if($type == 'local_pickup'){
-		if( isset($time[0])){
-			echo '<h2>' . __( 'Pick Up Order', 'food-online-for-woocommerce' ) . '</h2><ul><li>'. __( 'The customer will pickup the order in ', 'food-online-for-woocommerce' ) . $time[0] . __( ' minutes.', 'food-online-for-woocommerce' ).'</li></ul>';
-		}else{
-				echo '<h2>' . __( 'Pick Up Order', 'food-online-for-woocommerce' ) . '</h2>';
 		}
-			}elseif( ($type == 'flat_rate' || $type == 'free_shipping' || $type == 'szbd-shipping-method')  ){
-				if( isset($time[1])){
-				echo '<h2>' . __( 'Delivery Order' ,'food-online-for-woocommerce' ) . '</h2>';
-				 echo __( 'Deliver the order in ', 'food-online-for-woocommerce' ) . $time[1] . __( ' minutes.', 'food-online-for-woocommerce' );
-				}else{
-						echo '<h2>' . __( 'Delivery Order' ,'food-online-for-woocommerce' ) . '</h2>';
-				}
-
-				}
+	}elseif($store == true){
+		if($type == 'local_pickup'){
+			if( isset($time[0])){
+				echo '<h2>' . __( 'Pick Up Order', 'food-online-for-woocommerce' ) . '</h2><ul><li>'. __( 'The customer will pickup the order in ', 'food-online-for-woocommerce' ) . $time[0] . __( ' minutes.', 'food-online-for-woocommerce' ).'</li></ul>';
+			}else{
+				echo '<h2>' . __( 'Pick Up Order', 'food-online-for-woocommerce' ) . '</h2>';
 			}
-
-
-			$message = ob_get_clean();
-
-
+		}elseif( ($type == 'flat_rate' || $type == 'free_shipping' || $type == 'szbd-shipping-method')  ){
+			if( isset($time[1])){
+				echo '<h2>' . __( 'Delivery Order' ,'food-online-for-woocommerce' ) . '</h2>';
+				echo __( 'Deliver the order in ', 'food-online-for-woocommerce' ) . $time[1] . __( ' minutes.', 'food-online-for-woocommerce' );
+			}else{
+				echo '<h2>' . __( 'Delivery Order' ,'food-online-for-woocommerce' ) . '</h2>';
+			}
+		}
+	}
+	$message = ob_get_clean();
     echo $message;;
 }
+
 function add_order_time_info_to_emails( $fields, $sent_to_admin, $order, $email ) {
 	if ( $email->id == 'customer_processing_order' && get_option('fdoe_add_to_processing', 'no') == 'yes' ) {
 	$this-> echo_time();
